@@ -77,7 +77,10 @@ export default function Home() {
 
   // Calculate completion percentage
   const completionPercentage = vitamins && intake ? 
-    Math.round((intake.filter(i => i.taken).length / vitamins.length) * 100) : 0;
+    Math.round((intake.filter(i => 
+      i.taken && 
+      new Date(i.date).toISOString().split('T')[0] === date.toISOString().split('T')[0]
+    ).length / vitamins.length) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 dark:from-green-950 dark:to-slate-950">
