@@ -1,4 +1,6 @@
-import { type Vitamin, type InsertVitamin, type VitaminIntake, type InsertVitaminIntake } from "@shared/schema";
+import { db } from "./db";
+import { vitamins, vitaminIntake, type Vitamin, type InsertVitamin, type VitaminIntake, type InsertVitaminIntake } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   getVitamins(userId: string): Promise<Vitamin[]>;
@@ -9,67 +11,72 @@ export interface IStorage {
   upsertVitaminIntake(intake: InsertVitaminIntake): Promise<VitaminIntake>;
 }
 
-export class MemStorage implements IStorage {
-  private vitamins: Map<number, Vitamin>;
-  private vitaminIntake: Map<number, VitaminIntake>;
-  private currentVitaminId: number = 1;
-  private currentIntakeId: number = 1;
-
-  constructor() {
-    this.vitamins = new Map();
-    this.vitaminIntake = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getVitamins(userId: string): Promise<Vitamin[]> {
-    return Array.from(this.vitamins.values()).filter(v => v.userId === userId);
+    return db.select().from(vitamins).where(eq(vitamins.userId, userId));
   }
 
   async createVitamin(vitamin: InsertVitamin): Promise<Vitamin> {
-    const id = this.currentVitaminId++;
-    const newVitamin = { ...vitamin, id };
-    this.vitamins.set(id, newVitamin);
-    return newVitamin;
+    const [created] = await db.insert(vitamins).values(vitamin).returning();
+    return created;
   }
 
   async updateVitamin(id: number, vitamin: Partial<InsertVitamin>): Promise<Vitamin> {
-    const existing = this.vitamins.get(id);
-    if (!existing) throw new Error("Vitamin not found");
-    const updated = { ...existing, ...vitamin };
-    this.vitamins.set(id, updated);
+    const [updated] = await db
+      .update(vitamins)
+      .set(vitamin)
+      .where(eq(vitamins.id, id))
+      .returning();
+
+    if (!updated) throw new Error("Vitamin not found");
     return updated;
   }
 
   async deleteVitamin(id: number): Promise<void> {
-    this.vitamins.delete(id);
+    await db.delete(vitamins).where(eq(vitamins.id, id));
   }
 
   async getVitaminIntake(userId: string, date: Date): Promise<VitaminIntake[]> {
     const dateString = date.toISOString().split('T')[0];
-    return Array.from(this.vitaminIntake.values()).filter(
-      vi => vi.userId === userId && vi.date === dateString
-    );
+    return db
+      .select()
+      .from(vitaminIntake)
+      .where(
+        and(
+          eq(vitaminIntake.userId, userId),
+          eq(vitaminIntake.date, dateString)
+        )
+      );
   }
 
   async upsertVitaminIntake(intake: InsertVitaminIntake): Promise<VitaminIntake> {
     const dateString = new Date(intake.date).toISOString().split('T')[0];
-    const existing = Array.from(this.vitaminIntake.values()).find(
-      vi => 
-        vi.vitaminId === intake.vitaminId && 
-        vi.userId === intake.userId && 
-        vi.date === dateString
-    );
+    const existingIntake = await db
+      .select()
+      .from(vitaminIntake)
+      .where(
+        and(
+          eq(vitaminIntake.vitaminId, intake.vitaminId),
+          eq(vitaminIntake.userId, intake.userId),
+          eq(vitaminIntake.date, dateString)
+        )
+      );
 
-    if (existing) {
-      const updated = { ...existing, taken: intake.taken ?? false };
-      this.vitaminIntake.set(existing.id, updated);
+    if (existingIntake.length > 0) {
+      const [updated] = await db
+        .update(vitaminIntake)
+        .set({ taken: intake.taken })
+        .where(eq(vitaminIntake.id, existingIntake[0].id))
+        .returning();
       return updated;
     }
 
-    const id = this.currentIntakeId++;
-    const newIntake = { ...intake, id, date: dateString, taken: intake.taken ?? false };
-    this.vitaminIntake.set(id, newIntake);
-    return newIntake;
+    const [created] = await db
+      .insert(vitaminIntake)
+      .values({ ...intake, date: dateString })
+      .returning();
+    return created;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
