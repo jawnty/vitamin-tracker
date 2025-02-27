@@ -7,7 +7,7 @@ export async function registerRoutes(app: Express) {
   app.get("/api/vitamins", async (req, res) => {
     const userId = req.headers['x-user-id'] as string;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
-    
+
     const vitamins = await storage.getVitamins(userId);
     res.json(vitamins);
   });
@@ -56,9 +56,14 @@ export async function registerRoutes(app: Express) {
     const userId = req.headers['x-user-id'] as string;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const date = new Date(req.query.date as string);
+    const dateStr = req.query.date as string;
+    if (!dateStr) {
+      return res.status(400).json({ message: "Date parameter is required" });
+    }
+
+    const date = new Date(dateStr);
     if (isNaN(date.getTime())) {
-      return res.status(400).json({ message: "Invalid date" });
+      return res.status(400).json({ message: "Invalid date format" });
     }
 
     const intake = await storage.getVitaminIntake(userId, date);

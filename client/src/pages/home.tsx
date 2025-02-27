@@ -18,7 +18,20 @@ export default function Home() {
   });
 
   const { data: intake } = useQuery<VitaminIntake[]>({
-    queryKey: ["/api/vitamin-intake", date.toISOString().split('T')[0]],
+    queryKey: ["/api/vitamin-intake", { date: date.toISOString().split('T')[0] }],
+    queryFn: async ({ queryKey }) => {
+      const [url, params] = queryKey;
+      const searchParams = new URLSearchParams({ date: (params as any).date });
+      const response = await fetch(`${url}?${searchParams}`, {
+        headers: {
+          "X-User-ID": auth.currentUser?.uid || "",
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    },
     enabled: !!auth.currentUser,
   });
 
@@ -33,7 +46,7 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
-        queryKey: ["/api/vitamin-intake", date.toISOString().split('T')[0]] 
+        queryKey: ["/api/vitamin-intake", { date: date.toISOString().split('T')[0] }]
       });
     },
     onError: () => {
