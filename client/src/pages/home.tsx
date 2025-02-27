@@ -77,9 +77,12 @@ export default function Home() {
 
   // Calculate completion percentage
   const completionPercentage = vitamins && intake ? 
-    Math.round((intake.filter(i => 
-      i.taken && 
-      new Date(i.date).toISOString().split('T')[0] === date.toISOString().split('T')[0]
+    Math.round((vitamins.filter(vitamin => 
+      intake.some(i => 
+        i.vitaminId === vitamin.id && 
+        i.taken && 
+        new Date(i.date).toISOString().split('T')[0] === date.toISOString().split('T')[0]
+      )
     ).length / vitamins.length) * 100) : 0;
 
   return (
