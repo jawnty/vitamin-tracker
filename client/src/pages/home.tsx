@@ -164,12 +164,17 @@ export default function Home() {
                           </div>
                           <div className="flex items-center gap-3">
                             {taken ? (
-                              <Badge
+                              <Button
                                 variant="outline"
-                                className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800"
+                                size="sm"
+                                className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 dark:bg-green-900 dark:text-green-300 dark:border-green-800 dark:hover:bg-green-800"
+                                onClick={() => updateIntake({
+                                  vitaminId: vitamin.id,
+                                  taken: false
+                                })}
                               >
                                 Taken
-                              </Badge>
+                              </Button>
                             ) : (
                               <Button
                                 size="sm"
