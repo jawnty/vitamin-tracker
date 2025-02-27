@@ -77,11 +77,13 @@ export default function Home() {
   return (
     <div className="container py-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader>
           <CardTitle>Daily Vitamins</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
           <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
+              <Button variant="outline" className="w-full justify-start text-left font-normal">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {format(date, 'PPP')}
               </Button>
@@ -103,8 +105,7 @@ export default function Home() {
               />
             </DialogContent>
           </Dialog>
-        </CardHeader>
-        <CardContent>
+
           <div className="space-y-4">
             {isLoadingVitamins || isLoadingIntake ? (
               // Show loading skeletons
