@@ -1,0 +1,101 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { apiRequest } from "@/lib/queryClient";
+import { auth } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
+import type { Vitamin, VitaminIntake } from "@shared/schema";
+
+export default function Home() {
+  const [date, setDate] = useState<Date>(new Date());
+  const { toast } = useToast();
+
+  const { data: vitamins } = useQuery<Vitamin[]>({
+    queryKey: ["/api/vitamins"],
+    enabled: !!auth.currentUser,
+  });
+
+  const { data: intake } = useQuery<VitaminIntake[]>({
+    queryKey: ["/api/vitamin-intake", date.toISOString()],
+    enabled: !!auth.currentUser,
+  });
+
+  const { mutate: updateIntake } = useMutation({
+    mutationFn: async (data: { vitaminId: number; taken: boolean }) => {
+      return apiRequest("POST", "/api/vitamin-intake", {
+        vitaminId: data.vitaminId,
+        date,
+        taken: data.taken,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update vitamin intake",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <div className="container py-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Date</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(date) => date && setDate(date)}
+              className="rounded-md border"
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Daily Vitamins</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {vitamins?.map((vitamin) => {
+                const taken = intake?.some(
+                  (i) => i.vitaminId === vitamin.id && i.taken
+                );
+
+                return (
+                  <div
+                    key={vitamin.id}
+                    className="flex items-center space-x-2"
+                  >
+                    <Checkbox
+                      checked={taken}
+                      onCheckedChange={(checked) =>
+                        updateIntake({
+                          vitaminId: vitamin.id,
+                          taken: checked as boolean,
+                        })
+                      }
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {vitamin.name}
+                      </label>
+                      <p className="text-sm text-muted-foreground">
+                        {vitamin.dosage}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
