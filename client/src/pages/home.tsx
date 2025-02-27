@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import type { Vitamin, VitaminIntake } from "@shared/schema";
@@ -18,16 +18,22 @@ export default function Home() {
   });
 
   const { data: intake } = useQuery<VitaminIntake[]>({
-    queryKey: ["/api/vitamin-intake", date.toISOString()],
+    queryKey: ["/api/vitamin-intake", date.toISOString().split('T')[0]],
     enabled: !!auth.currentUser,
   });
 
   const { mutate: updateIntake } = useMutation({
     mutationFn: async (data: { vitaminId: number; taken: boolean }) => {
-      return apiRequest("POST", "/api/vitamin-intake", {
+      const response = await apiRequest("POST", "/api/vitamin-intake", {
         vitaminId: data.vitaminId,
-        date,
+        date: date.toISOString().split('T')[0],
         taken: data.taken,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/vitamin-intake", date.toISOString().split('T')[0]] 
       });
     },
     onError: () => {

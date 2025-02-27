@@ -37,7 +37,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVitaminIntake(userId: string, date: Date): Promise<VitaminIntake[]> {
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = new Date(date).toISOString().split('T')[0];
     return db
       .select()
       .from(vitaminIntake)
