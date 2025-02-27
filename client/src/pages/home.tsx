@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,16 @@ export default function Home() {
     },
     enabled: !!auth.currentUser,
   });
+
+  // Force refetch when auth state changes
+  useEffect(() => {
+    if (auth.currentUser) {
+      queryClient.invalidateQueries({ queryKey: ["/api/vitamins"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/vitamin-intake", { date: date.toISOString().split('T')[0] }]
+      });
+    }
+  }, [auth.currentUser, date]);
 
   const { mutate: updateIntake } = useMutation({
     mutationFn: async (data: { vitaminId: number; taken: boolean }) => {
