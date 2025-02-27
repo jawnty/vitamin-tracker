@@ -56,6 +56,7 @@ function VitaminForm({
 export default function VitaminList() {
   const { toast } = useToast();
   const [editingVitamin, setEditingVitamin] = useState<Vitamin | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const { data: vitamins } = useQuery<Vitamin[]>({
     queryKey: ["/api/vitamins"],
@@ -68,6 +69,7 @@ export default function VitaminList() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vitamins"] });
       toast({ title: "Success", description: "Vitamin added successfully" });
+      setAddDialogOpen(false);
     },
   });
 
@@ -100,7 +102,7 @@ export default function VitaminList() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Manage Vitamins</CardTitle>
-          <Dialog>
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
