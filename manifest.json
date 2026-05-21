@@ -1,0 +1,22 @@
+{
+  "name": "Vitamin Tracker",
+  "short_name": "VitTracker",
+  "start_url": "https://e4a035a0f2bff7006be37c446ae3cd7f.serveo.net/index.html",
+  "display": "standalone",
+  "scope": "https://e4a035a0f2bff7006be37c446ae3cd7f.serveo.net",
+  "icons": [
+    {
+      "src": "https://e4a035a0f2bff7006be37c446ae3cd7f.serveo.net/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://e4a035a0f2bff7006be37c446ae3cd7f.serveo.net/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "description": "Track your daily vitamins and supplements"
+}
