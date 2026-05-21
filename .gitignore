@@ -4,3 +4,9 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+.env
+.env.*
+*.report.html
+lighthouse-report.html
+full-lighthouse-report.html
+client/dev-dist/
